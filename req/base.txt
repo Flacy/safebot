@@ -1,0 +1,12 @@
+pyrogram~=2.0.106
+tgcrypto~=1.2.5
+
+pydantic~=2.6.3
+pydantic-settings~=2.2.1
+
+aiopg~=1.4.0
+peewee~=3.17.1
+peewee-async~=0.10.0
+peewee-migrations~=0.3.32
+
+loguru~=0.7.2

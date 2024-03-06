@@ -1,0 +1,13 @@
+{
+  "message_deleted": [
+    "message from {mention} has been deleted",
+    "suspicion of advertising, {mention}. Message deleted",
+    "{mention}, don't send such things..",
+    "-1 karma {mention}",
+    "admin {mention} cheapie"
+  ],
+  "not_enough_rights": [
+    "i don't have enough rights, to delete this",
+    "are you really **don't** want to see **this**?"
+  ]
+}

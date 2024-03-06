@@ -1,0 +1,85 @@
+import json
+from pathlib import Path
+from random import sample
+
+from pyrogram.types import Message
+
+from client import client
+from handlers import database
+from logger import logger
+
+LOCALES: dict[str, dict[str, list[str]]] = {}
+
+
+def __load_locales() -> int:
+    """
+    Loads localization files (stored in "locales" and are of type json)
+    into a shared dictionary. Safe method
+
+    :return: Count of successfully loaded locales
+    """
+    count = 0
+
+    for file in Path("locales").glob("*.json"):
+        code = file.name[:2]
+
+        try:
+            with file.open() as f:
+                LOCALES[code] = json.load(f)
+
+            logger.debug(f"Locale '{code}' loaded")
+            count += 1
+        except Exception as e:
+            logger.error(f"Locale '{code}' was failed to load: {e}")
+
+    return count
+
+
+def _get_text(lang_code: str, key: str) -> str:
+    """
+    Retrieves random locale from the shared dictionary using the specified key and language code.
+    If the language code is not found, "en" will be used.
+
+    :param lang_code: Two-letter language code
+    :param key: Locale key
+    :return: Locale text
+    """
+    loc = LOCALES.get(lang_code, LOCALES.get("en"))
+    return sample(loc[key], 1)[0]
+
+
+async def send(message: Message, key: str, reply: bool = False, mention: bool = False) -> None:
+    """
+    Sends a message with the localized text to the chat.
+
+    :param message: Input bot message;
+    :param key: Locale key;
+    :param reply: Whether this message will be a reply;
+    :param mention: Whether the locale contains a mention.
+    """
+    text = _get_text(message.from_user.language_code, key)
+    if mention:
+        text = text.format(mention=message.from_user.mention)
+
+    await client.send_message(
+        message.chat.id, text, reply_to_message_id=message.id if reply else None
+    )
+
+
+async def send_delete_message(message: Message, deleted: bool) -> None:
+    """
+    Checks the chat for silent mode.
+    If it is disabled, then send a message about the result of the operation.
+
+    :param message: Input bot message;
+    :param deleted: Whether the message was deleted.
+    """
+    if not (await database.is_silent_mode(message.chat.id)):
+        if deleted:
+            await send(message, "message_deleted", mention=True)
+        else:
+            await send(message, "not_enough_rights", reply=True)
+
+
+def init() -> None:
+    logger.info(f"{__load_locales()} locales initialized")
