@@ -22,21 +22,6 @@ async def _delete_message(message: Message, force_silent: bool = False) -> None:
         await messages.send_delete_message(message, deleted)
 
 
-async def _can_echo_message(message: Message) -> bool:
-    """
-    Checks the ability to send an echo message.
-
-    :param message: Input bot message.
-    :return: ``True`` if the function is enabled in this chat,
-        and the message contains a mention, otherwise ``False``
-    """
-    return (
-        message.entities is not None
-        and await database.is_echo_mode(message.chat.id)
-        and scan.contain_text_mention(message.entities)
-    )
-
-
 async def _echo_message(message: Message) -> None:
     """
     Sends an echo message, replacing all text links with its own.
@@ -59,11 +44,15 @@ async def _message_handler(_: Client, message: Message) -> None:
 
     If echo mode is enabled, silent mode will be applied forcibly.
     """
-    if message.from_user.is_bot or ((forward := message.forward_from) and forward.is_bot):
-        if scan.quick_scan(message):
-            logger.debug(f"Found adv in ({message.id=}, {message.chat.id=})")
+    sender = message.forward_from or message.from_user
 
-            can_echo = await _can_echo_message(message)
+    if sender and sender.is_bot:
+        reader = scan.Reader(message)
+
+        if reader.quick_scan():
+            logger.debug(f"Found adv in ({message}, {message.chat.id=})")
+
+            can_echo = reader.can_echo_message
             await _delete_message(message, force_silent=can_echo)
 
             if can_echo:
