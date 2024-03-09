@@ -6,9 +6,7 @@ from logger import logger
 _DOMAIN_TG = "t.me"
 
 _DOMAIN_ALIASES: dict[str, tuple[str]] = {
-    _DOMAIN_TG: (
-        "telegram.org",
-    ),
+    _DOMAIN_TG: ("telegram.org",),
 }
 _SAFE_DEEP_LINKS: dict[str, tuple[str]] = {
     "tg": (
@@ -75,7 +73,9 @@ class Scanner:
         if not (checkers := self.methods.get(self.domain)):
             return True
 
-        return self._call_and_check(checkers.deep if self._deep_scan else checkers.quick)
+        return self._call_and_check(
+            checkers.deep if self._deep_scan else checkers.quick
+        )
 
 
 class Link:
@@ -125,7 +125,9 @@ class Link:
         if self._is_ignore():
             self.is_unsafe = False
         elif self.domain in _DOMAIN_ALIASES:
-            self.is_unsafe = Scanner(self.domain, self.path, deep_scan=self._deep_scan).find()
+            self.is_unsafe = Scanner(
+                self.domain, self.path, deep_scan=self._deep_scan
+            ).find()
 
         logger.debug(f"Link scan complete: {self.url=} {self.is_unsafe=}")
         return self.is_unsafe

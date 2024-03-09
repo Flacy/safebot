@@ -27,7 +27,9 @@ class Reader:
         """
         Scans inline markup for any links.
         """
-        if (context_menu := self.message.reply_markup) and isinstance(context_menu, InlineKeyboardMarkup):
+        if (context_menu := self.message.reply_markup) and isinstance(
+            context_menu, InlineKeyboardMarkup
+        ):
             if keyboard := context_menu.inline_keyboard:
                 for button in keyboard:
                     for data in button:
