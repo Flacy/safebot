@@ -85,8 +85,8 @@ class Link:
         self.domain: str = ""
         self.path: str = ""
 
-        self.is_safe: bool = False
         self._deep_scan: bool = deep_scan
+        self._is_safe: bool = False
 
         self._parse()
 
@@ -113,6 +113,10 @@ class Link:
 
         return False
 
+    @property
+    def is_safe(self) -> bool:
+        return self._is_safe
+
     def scan(self) -> bool:
         """
         Scans the link for advertising using the selected scanning mode
@@ -123,14 +127,14 @@ class Link:
         :return: Whether the link is considered unsafe.
         """
         if self._is_ignore():
-            self.is_safe = True
+            self._is_safe = True
         elif self.domain in _DOMAIN_ALIASES:
-            self.is_safe = not Scanner(
+            self._is_safe = not Scanner(
                 self.domain, self.path, deep_scan=self._deep_scan
             ).find()
 
-        logger.debug(f"Link scan complete: {self.url=} {self.is_safe=}")
-        return not self.is_safe
+        logger.debug(f"Link scan complete: {self.url=} {self._is_safe=}")
+        return not self._is_safe
 
 
 def _init_scanner_methods() -> None:
