@@ -47,7 +47,7 @@ class Scanner:
 
         :return: Result indicating whether the link is a bot link.
         """
-        return self.path.split("?")[0].endswith("bot")
+        return self.path.split("?")[0].lower().endswith("bot")
 
     def _call_and_check(self, methods: _ScannerMethods) -> bool:
         """
