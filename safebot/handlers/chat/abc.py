@@ -1,9 +1,9 @@
-from typing import Protocol
+import abc
 
 from pyrogram.types import Message, User
 
 
-class MessageProtocol(Protocol):
+class MessageProtocol(abc.ABC):
     def __init__(self, message: Message) -> None:
         self.chat_id: int = message.chat.id
         self.message_id: int = message.id
@@ -11,4 +11,5 @@ class MessageProtocol(Protocol):
 
         self.message: Message = message
 
+    @abc.abstractmethod
     async def process(self) -> None: ...

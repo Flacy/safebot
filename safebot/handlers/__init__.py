@@ -1,3 +1,5 @@
+from typing import Type
+
 from pyrogram import Client
 from pyrogram.enums import ChatType
 from pyrogram.handlers import MessageHandler
@@ -23,7 +25,7 @@ async def _message_handler(_: Client, message: Message) -> None:
 
     If echo mode is enabled, silent mode will be applied forcibly.
     """
-    handler: MessageProtocol
+    handler: Type[MessageProtocol]
     chat_type = message.chat.type
 
     if (chat_type == ChatType.SUPERGROUP) or (chat_type == ChatType.GROUP):
