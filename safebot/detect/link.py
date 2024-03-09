@@ -94,7 +94,10 @@ class Link:
         """
         Parses the link into protocol, domain, and path.
         """
-        self.protocol, self.domain = self.url.split("://", 1)
+        if "://" in self.url:
+            self.protocol, self.domain = self.url.split("://", 1)
+        else:
+            self.domain = self.url
 
         if "/" in self.domain:
             self.domain, self.path = self.domain.split("/", 1)
