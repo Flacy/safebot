@@ -1,7 +1,7 @@
 from client import client
 from detect import scan, filters
 from handlers.chat.abc import MessageProtocol
-from handlers.sender import Sender
+from handlers.emitter import Emitter
 from logger import logger
 
 
@@ -16,7 +16,7 @@ class PublicMessage(MessageProtocol):
         logger.debug(f"Delete message ({self.message_id=}, {self.chat_id=}): {deleted}")
 
         if not force_silent:
-            await Sender(self.message).send_delete_message(deleted)
+            await Emitter(self.message).send_delete_message(deleted)
 
     async def _echo_message(self) -> None:
         """

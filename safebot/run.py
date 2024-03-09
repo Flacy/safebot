@@ -1,10 +1,10 @@
 import handlers
 from client import client
 from detect import link
-from handlers import sender
+from handlers import emitter
 
 link.init()
-sender.init()
+emitter.init()
 handlers.init()
 
 client.run()

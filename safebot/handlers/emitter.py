@@ -9,7 +9,7 @@ from handlers import database
 from logger import logger
 
 
-class Sender:
+class Emitter:
     locales: dict[str, dict[str, list[str]]] = {}
 
     def __init__(self, message: Message) -> None:
@@ -27,17 +27,22 @@ class Sender:
         loc = self.locales.get(lang_code, self.locales.get("en"))
         return sample(loc[key], 1)[0]
 
-    async def send(self, key: str, reply: bool = False, mention: bool = False) -> None:
+    async def send(
+        self,
+        key: str,
+        *,
+        reply: bool = False,
+        **fmt,
+    ) -> None:
         """
         Sends a message with the localized text to the chat.
 
         :param key: Locale key;
         :param reply: Whether this message will be a reply;
-        :param mention: Whether the locale contains a mention.
         """
         text = self._get_text(self.message.from_user.language_code, key)
-        if mention:
-            text = text.format(mention=self.message.from_user.mention)
+        if fmt:
+            text = text.format(**fmt)
 
         await client.send_message(
             self.message.chat.id,
@@ -54,7 +59,7 @@ class Sender:
         """
         if not (await database.is_silent_mode(self.message.chat.id)):
             if deleted:
-                await self.send("message_deleted", mention=True)
+                await self.send("message_deleted", mention=self.message.from_user.mention)
             else:
                 await self.send("not_enough_rights", reply=True)
 
@@ -62,7 +67,7 @@ class Sender:
 def __load_locales() -> int:
     """
     Loads localization files (stored in "locales" and are of type json)
-    into ``Sender.locales``.
+    into ``Emitter.locales``.
 
     :return: Count of successfully loaded locales
     """
@@ -73,7 +78,7 @@ def __load_locales() -> int:
 
         try:
             with file.open() as f:
-                Sender.locales[code] = json.load(f)
+                Emitter.locales[code] = json.load(f)
 
             logger.debug(f"Locale '{code}' loaded")
             count += 1
