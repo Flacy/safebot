@@ -17,7 +17,8 @@ class Emitter:
 
     def _get_text(self, lang_code: str, key: str) -> str:
         """
-        Retrieves random locale from the shared dictionary using the specified key and language code.
+        Retrieves random locale from the locale's dictionary
+        using the specified key and language code.
         If the language code is not found, "en" will be used.
 
         :param lang_code: Two-letter language code
@@ -59,7 +60,9 @@ class Emitter:
         """
         if not (await database.is_silent_mode(self.message.chat.id)):
             if deleted:
-                await self.send("message_deleted", mention=self.message.from_user.mention)
+                await self.send(
+                    "message_deleted", mention=self.message.from_user.mention
+                )
             else:
                 await self.send("not_enough_rights", reply=True)
 
