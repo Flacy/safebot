@@ -4,7 +4,6 @@ from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 
 from client import client
-from handlers import sender, database
 from handlers.chat.abc import MessageProtocol
 from handlers.chat.private import PrivateMessage
 from handlers.chat.public import PublicMessage
