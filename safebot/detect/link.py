@@ -85,7 +85,7 @@ class Link:
         self.domain: str = ""
         self.path: str = ""
 
-        self.is_unsafe: bool = True
+        self.is_safe: bool = False
         self._deep_scan: bool = deep_scan
 
         self._parse()
@@ -123,14 +123,14 @@ class Link:
         :return: Whether the link is considered unsafe.
         """
         if self._is_ignore():
-            self.is_unsafe = False
+            self.is_safe = True
         elif self.domain in _DOMAIN_ALIASES:
-            self.is_unsafe = Scanner(
+            self.is_safe = not Scanner(
                 self.domain, self.path, deep_scan=self._deep_scan
             ).find()
 
-        logger.debug(f"Link scan complete: {self.url=} {self.is_unsafe=}")
-        return self.is_unsafe
+        logger.debug(f"Link scan complete: {self.url=} {self.is_safe=}")
+        return not self.is_safe
 
 
 def _init_scanner_methods() -> None:
