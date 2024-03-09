@@ -10,4 +10,3 @@ peewee-async~=0.10.0
 peewee-migrations~=0.3.32
 
 loguru~=0.7.2
-black~=24.2.0
