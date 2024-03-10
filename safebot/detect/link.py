@@ -1,24 +1,16 @@
 from dataclasses import dataclass
 from typing import Callable
+from urllib.parse import ParseResult, urlparse
 
 from logger import logger
 
-_DOMAIN_TG = "t.me"
+_DOMAINS_TG = (
+    "t.me",
+    "telegram.org",
+)
+_DOMAIN_TG_LINK = _DOMAINS_TG[0]
 
-_DOMAIN_ALIASES: dict[str, tuple[str]] = {
-    _DOMAIN_TG: ("telegram.org",),
-}
-_SAFE_DEEP_LINKS: dict[str, tuple[str]] = {
-    "tg": (
-        # Some developers use this path to create a link to the chat.
-        # Its functionality is often unclear, and it frequently doesn't work.
-        # However, it is considered to be safe, as there is a specific path
-        # for chat links: "tg://user?id="
-        "openmessage",
-    ),
-}
-
-_ScannerMethods = list[Callable]
+_ScannerMethods = tuple[Callable[["Scanner"], bool], ...]
 
 
 @dataclass
@@ -45,19 +37,31 @@ class Scanner:
         """
         Telegram validation method.
 
-        :return: Result indicating whether the link is a bot link.
+        Determines whether the bot username is specified in the path.
         """
         return self.path.split("?")[0].lower().endswith("bot")
+
+    def is_tg_invite_link(self) -> bool:
+        """
+        Telegram validation method.
+
+        Determines whether the path matches the pattern of an invitation link.
+        """
+        if self.path == "":
+            return False
+
+        return self.path[0] == "+" or self.path.startswith("joinchat/")
 
     def _call_and_check(self, methods: _ScannerMethods) -> bool:
         """
         Invokes each passed method in turn.
 
-        :param methods:
+        :param methods: Check methods;
         :return: ``True``, if any of the methods return True,
             otherwise ``False``.
         """
         for check in methods:
+            logger.debug(check(self))
             if check(self):
                 return True
 
@@ -79,46 +83,53 @@ class Scanner:
 
 
 class Link:
-    def __init__(self, url: str, *, deep_scan: bool = False):
+    def __init__(self, url: str, *, deep_scan: bool = False) -> None:
         self.url: str = url
-        self.protocol: str = ""
-        self.domain: str = ""
-        self.path: str = ""
+        self.parsed_url: ParseResult = urlparse(url)
 
         self._deep_scan: bool = deep_scan
         self._is_safe: bool = False
 
-        self._parse()
+        # Scanner is not designed to handle tg protocol links
+        self._scanner: Scanner | None = (
+            Scanner(
+                self.parsed_url.netloc,
+                self.parsed_url.path[1:],  # Cut "/"
+                deep_scan=deep_scan,
+            )
+            if "." in self.parsed_url.netloc
+            else None
+        )
 
-    def _parse(self) -> None:
+    def _is_broken(self) -> bool:
+        """ "
+        Verifies if the link matches the pattern: "tg://openmessage?chat_id=".
+        This is ignored as its reliability remains questionable.
+        It often (or always?) doesn't work, so we consider it safe.
+        Additionally, there is a functional alternative: "tg://user?id="
         """
-        Parses the link into protocol, domain, and path.
-        """
-        if "://" in self.url:
-            self.protocol, self.domain = self.url.split("://", 1)
-        else:
-            self.domain = self.url
-
-        if "/" in self.domain:
-            self.domain, self.path = self.domain.split("/", 1)
-
-    def _is_ignore(self) -> bool:
-        """
-        Checks for the presence of the protocol in safe deep links.
-        If the protocol is found, then it checks for the inclusion of
-        the domain (in deep links, this is the path) as a safe one.
-
-        :return: Is the link in the ignored list.
-        """
-        for path in _SAFE_DEEP_LINKS.get(self.protocol, ()):
-            if self.domain.startswith(path):
-                return True
-
-        return False
+        return self.parsed_url.scheme == "tg" and self.parsed_url.netloc.startswith(
+            "openmessage"
+        )
 
     @property
     def is_safe(self) -> bool:
+        """
+        Link is considered safe only if it:
+
+        - leads to a user or a channel;
+        - is not a link to an external website;
+        - is being ignored.
+        """
         return self._is_safe
+
+    @property
+    def is_invite_link(self) -> bool:
+        """
+        Checks if the link is an invitation to join a chat.
+        """
+        if self._scanner and self.parsed_url.netloc == _DOMAIN_TG_LINK:
+            return self._scanner.is_tg_invite_link()
 
     def scan(self) -> bool:
         """
@@ -129,12 +140,10 @@ class Link:
 
         :return: Whether the link is considered unsafe.
         """
-        if self._is_ignore():
+        if self._is_broken():
             self._is_safe = True
-        elif self.domain in _DOMAIN_ALIASES:
-            self._is_safe = not Scanner(
-                self.domain, self.path, deep_scan=self._deep_scan
-            ).find()
+        elif self.parsed_url.path != "":
+            self._is_safe = not self._scanner.find()
 
         logger.debug(f"Link scan complete: {self.url=} {self._is_safe=}")
         return not self._is_safe
@@ -145,9 +154,12 @@ def _init_scanner_methods() -> None:
     Adds validation methods to the ``Scanner`` corresponding to each domain.
     """
     Scanner.methods = {
-        _DOMAIN_TG: _LinkCheck(
-            quick=[Scanner.is_tg_bot],
-            deep=[],
+        _DOMAIN_TG_LINK: _LinkCheck(
+            quick=(
+                Scanner.is_tg_bot,
+                Scanner.is_tg_invite_link,
+            ),
+            deep=(),
         ),
     }
 
@@ -156,9 +168,11 @@ def _add_scanner_aliases() -> None:
     """
     Adds aliases to the domains by creating references to the original.
     """
-    for domain, aliases in _DOMAIN_ALIASES.items():
-        for alias in aliases:
-            Scanner.methods[alias] = Scanner.methods[domain]
+    for service in (_DOMAINS_TG,):
+        original = service[0]
+
+        for domain in service[1:]:
+            Scanner.methods[domain] = Scanner.methods[original]
 
 
 def init() -> None:
