@@ -11,7 +11,7 @@ def _standardize_url(url: str) -> str:
     :param url: String URL;
     :return: RFC-compliant URI.
     """
-    if ":" not in url:
+    if "://" not in url:
         return "https://" + url
 
     return url
