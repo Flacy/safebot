@@ -124,7 +124,7 @@ class Link:
         return self._is_safe
 
     @property
-    def is_invite_link(self) -> bool:
+    def is_invite(self) -> bool:
         """
         Checks if the link is an invitation to join a chat.
         """
