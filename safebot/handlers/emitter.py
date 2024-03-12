@@ -26,7 +26,7 @@ class Emitter:
         :return: Locale text
         """
         loc = self.locales.get(lang_code, self.locales.get("en"))
-        return sample(loc[key], 1)[0]
+        return sample(loc[key], 1)[0]  # type: ignore
 
     async def send(
         self,

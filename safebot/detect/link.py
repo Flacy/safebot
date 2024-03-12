@@ -131,6 +131,8 @@ class Link:
         if self._scanner and self.parsed_url.netloc == _DOMAIN_TG_LINK:
             return self._scanner.is_tg_invite_link()
 
+        return False
+
     def scan(self) -> bool:
         """
         Scans the link for advertising using the selected scanning mode
@@ -142,7 +144,7 @@ class Link:
         """
         if self._is_broken():
             self._is_safe = True
-        elif self.parsed_url.path != "":
+        elif self._scanner and self.parsed_url.path != "":
             self._is_safe = not self._scanner.find()
 
         logger.debug(f"Link scan complete: {self.url=} {self._is_safe=}")
