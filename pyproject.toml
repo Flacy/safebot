@@ -7,3 +7,4 @@ plugins = [
 ]
 ignore_missing_imports = true
 warn_no_return = false
+exclude = ['venv', 'migrations', 'tests']

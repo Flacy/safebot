@@ -48,7 +48,7 @@ class Emitter:
         await client.send_message(
             self.message.chat.id,
             text,
-            reply_to_message_id=self.message.id if reply else None,
+            reply_to_message_id=self.message.id if reply else None,  # type: ignore
         )
 
     async def send_delete_message(self, deleted: bool) -> None:
