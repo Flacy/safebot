@@ -3,7 +3,7 @@ import sys
 
 import loguru
 
-from settings import config
+from safebot.settings import config
 
 LOG_LEVEL = logging.INFO if config.production else logging.DEBUG
 

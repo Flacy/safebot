@@ -1,8 +1,8 @@
 from pyrogram.enums import MessageEntityType
 from pyrogram.types import Message, InlineKeyboardMarkup
 
-import helpers
-from detect.link import Link
+from safebot import helpers
+from safebot.detect.link import Link
 
 
 class Reader:

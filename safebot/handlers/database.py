@@ -1,7 +1,7 @@
 from peewee_async import IntegrityErrors  # noqa
 
-from database.client import manager
-from database.models import Chat
+from safebot.database.client import manager
+from safebot.database.models import Chat
 
 
 async def create_or_skip(chat_id: int) -> None:

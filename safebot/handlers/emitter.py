@@ -4,9 +4,9 @@ from random import sample
 
 from pyrogram.types import Message
 
-from client import client
-from handlers import database
-from logger import logger
+from safebot.client import client
+from safebot.handlers import database
+from safebot.logger import logger
 
 
 class Emitter:

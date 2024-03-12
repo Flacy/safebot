@@ -5,11 +5,11 @@ from pyrogram.enums import ChatType
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 
-from client import client
-from handlers.chat.abc import MessageProtocol
-from handlers.chat.private import PrivateMessage
-from handlers.chat.public import PublicMessage
-from logger import logger
+from safebot.client import client
+from safebot.handlers.chat.abc import MessageProtocol
+from safebot.handlers.chat.private import PrivateMessage
+from safebot.handlers.chat.public import PublicMessage
+from safebot.logger import logger
 
 
 @logger.catch

@@ -1,6 +1,6 @@
 import peewee_async
 
-from settings import config
+from safebot.settings import config
 
 connection = peewee_async.PostgresqlDatabase(
     host=config.postgres_host,

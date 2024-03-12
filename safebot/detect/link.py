@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Callable
 from urllib.parse import ParseResult, urlparse
 
-from logger import logger
+from safebot.logger import logger
 
 _DOMAINS_TG = (
     "t.me",

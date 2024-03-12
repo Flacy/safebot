@@ -8,12 +8,13 @@ from pyrogram.errors import (
 )
 from pyrogram.types import Chat
 
-from client import client
-from detect.link import Link
-from handlers import MessageProtocol, database
-from handlers.emitter import Emitter
-from helpers import retrieve_urls
-from logger import logger
+from safebot.client import client
+from safebot.detect.link import Link
+from safebot.handlers import database
+from safebot.handlers.chat.abc import MessageProtocol
+from safebot.handlers.emitter import Emitter
+from safebot.helpers import retrieve_urls
+from safebot.logger import logger
 
 
 class PrivateMessage(MessageProtocol):

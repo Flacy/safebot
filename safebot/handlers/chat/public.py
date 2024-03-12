@@ -1,8 +1,8 @@
-from client import client
-from detect import scan, filters
-from handlers.chat.abc import MessageProtocol
-from handlers.emitter import Emitter
-from logger import logger
+from safebot.client import client
+from safebot.detect import scan, filters
+from safebot.handlers.chat.abc import MessageProtocol
+from safebot.handlers.emitter import Emitter
+from safebot.logger import logger
 
 
 class PublicMessage(MessageProtocol):

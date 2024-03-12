@@ -1,6 +1,6 @@
 from pyrogram import Client
 
-from settings import config
+from safebot.settings import config
 
 __client_name = "safebot"
 

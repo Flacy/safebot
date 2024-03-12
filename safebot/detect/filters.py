@@ -1,7 +1,7 @@
 from pyrogram.enums import MessageEntityType
 from pyrogram.types import MessageEntity
 
-from settings import config
+from safebot.settings import config
 
 
 def replace_text_links(entities: list[MessageEntity]) -> None:

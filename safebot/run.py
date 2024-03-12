@@ -1,7 +1,7 @@
-import handlers
-from client import client
-from detect import link
-from handlers import emitter
+from safebot import handlers
+from safebot.client import client
+from safebot.detect import link
+from safebot.handlers import emitter
 
 link.init()
 emitter.init()

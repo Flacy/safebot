@@ -1,6 +1,6 @@
 import peewee
 
-from database.client import connection
+from safebot.database.client import connection
 
 
 class BaseModel(peewee.Model):
