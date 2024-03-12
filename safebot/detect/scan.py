@@ -51,7 +51,7 @@ class Reader:
         """
         Checks if there is any text mention in the entities.
         """
-        for data in (self.message.entities or ()):
+        for data in self.message.entities or ():
             if data.type == MessageEntityType.TEXT_MENTION:
                 # TODO: add comparisons to determine if the user is human or a bot
                 return True

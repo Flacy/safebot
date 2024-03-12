@@ -32,6 +32,6 @@ def retrieve_urls(
             # Telegram can send links without a protocol.
             # This breaks the "urlparse" algorithm,
             # so standardize it to RFC format.
-            yield _standardize_url(text[ent.offset:][:ent.length])
+            yield _standardize_url(text[ent.offset:][:ent.length])  # fmt: skip
         elif ent.type == MessageEntityType.TEXT_LINK:
             yield ent.url
