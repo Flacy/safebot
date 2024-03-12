@@ -78,7 +78,7 @@ class PrivateMessage(MessageProtocol):
         """
         if (
             (url := self._retrieve_invite_link())
-            and Link(url).scanner.is_tg_invite_link
+            and Link(url).scanner.is_invite_link
             and (chat := await self._join_chat(url))
         ):
             await database.create_or_skip(chat.id)

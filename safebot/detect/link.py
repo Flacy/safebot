@@ -33,19 +33,15 @@ class Scanner:
         self._deep_scan: bool = deep_scan
 
     @property
-    def is_tg_bot(self) -> bool:
+    def is_bot(self) -> bool:
         """
-        Telegram validation method.
-
         Determines whether the bot username is specified in the path.
         """
         return self.path.split("?")[0].lower().endswith("bot")
 
     @property
-    def is_tg_invite_link(self) -> bool:
+    def is_invite_link(self) -> bool:
         """
-        Telegram validation method.
-
         Determines whether the path matches the pattern of an invitation link.
         """
         if self.domain != _DOMAIN_TG_LINK or self.path == "":
@@ -142,8 +138,8 @@ def _init_scanner_methods() -> None:
     Scanner.methods = {
         _DOMAIN_TG_LINK: _LinkCheck(
             quick=(
-                Scanner.is_tg_bot,
-                Scanner.is_tg_invite_link,
+                Scanner.is_bot,
+                Scanner.is_invite_link,
             ),
             deep=(),
         ),
