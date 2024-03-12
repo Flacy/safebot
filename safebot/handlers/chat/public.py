@@ -1,21 +1,31 @@
 from safebot.client import client
 from safebot.detect import scan, filters
+from safebot.handlers import database
 from safebot.handlers.chat.abc import MessageProtocol
 from safebot.handlers.emitter import Emitter
 from safebot.logger import logger
 
 
 class PublicMessage(MessageProtocol):
-    async def _delete_message(self, force_silent: bool = False) -> None:
+    async def _delete_message(self) -> bool:
         """
-        Deletes the message and sends the result of the operation.
-
-        :param force_silent: Forcefully do not send the message.
+        Deletes message and returns status of whether message has been deleted.
         """
         deleted = bool(await client.delete_messages(self.chat_id, self.message_id))
         logger.debug(f"Delete message ({self.message_id=}, {self.chat_id=}): {deleted}")
 
-        if not force_silent:
+        return deleted
+
+    async def _event_message_deleted(self, deleted: bool) -> None:
+        """
+        Event called when a message deletion occurs.
+
+        Checks the **silent mode** status for this chat.
+        If it's disabled, send a message with the deletion result.
+
+        :param deleted: Whether the message was deleted.
+        """
+        if not (await database.is_silent_mode(self.message.chat.id)):
             await Emitter(self.message).send_delete_message(deleted)
 
     async def _echo_message(self) -> None:
@@ -37,9 +47,9 @@ class PublicMessage(MessageProtocol):
 
             if reader.quick_scan():
                 logger.debug(f"Found adv in ({self.message_id=}, {self.chat_id=})")
+                is_deleted = await self._delete_message()
 
-                can_echo = reader.can_echo_message
-                await self._delete_message(force_silent=can_echo)
-
-                if can_echo:
+                if is_deleted and reader.can_echo_message:
                     await self._echo_message()
+                else:
+                    await self._event_message_deleted(is_deleted)

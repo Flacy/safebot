@@ -5,7 +5,6 @@ from random import sample
 from pyrogram.types import Message
 
 from safebot.client import client
-from safebot.handlers import database
 from safebot.logger import logger
 
 
@@ -53,18 +52,14 @@ class Emitter:
 
     async def send_delete_message(self, deleted: bool) -> None:
         """
-        Checks the chat for silent mode.
-        If it is disabled, then send a message about the result of the operation.
+        Sends a different info message based on the ``deleted`` argument.
 
         :param deleted: Whether the message was deleted.
         """
-        if not (await database.is_silent_mode(self.message.chat.id)):
-            if deleted:
-                await self.send(
-                    "message_deleted", mention=self.message.from_user.mention
-                )
-            else:
-                await self.send("not_enough_rights", reply=True)
+        if deleted:
+            await self.send("message_deleted", mention=self.message.from_user.mention)
+        else:
+            await self.send("not_enough_rights", reply=True)
 
 
 def __load_locales() -> int:
