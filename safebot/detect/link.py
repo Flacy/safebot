@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Callable
 from urllib.parse import ParseResult, urlparse
 
 from safebot.logger import logger
@@ -10,7 +9,7 @@ _DOMAINS_TG = (
 )
 _DOMAIN_TG_LINK = _DOMAINS_TG[0]
 
-_ScannerMethods = tuple[Callable[["Scanner"], bool], ...]
+_ScannerMethods = tuple[[property, bool], ...]
 
 
 @dataclass
@@ -33,6 +32,7 @@ class Scanner:
 
         self._deep_scan: bool = deep_scan
 
+    @property
     def is_tg_bot(self) -> bool:
         """
         Telegram validation method.
@@ -41,13 +41,14 @@ class Scanner:
         """
         return self.path.split("?")[0].lower().endswith("bot")
 
+    @property
     def is_tg_invite_link(self) -> bool:
         """
         Telegram validation method.
 
         Determines whether the path matches the pattern of an invitation link.
         """
-        if self.path == "":
+        if self.domain != _DOMAIN_TG_LINK or self.path == "":
             return False
 
         return self.path[0] == "+" or self.path.startswith("joinchat/")
@@ -61,8 +62,7 @@ class Scanner:
             otherwise ``False``.
         """
         for check in methods:
-            logger.debug(check(self))
-            if check(self):
+            if check.fget(self):
                 return True
 
         return False
@@ -78,7 +78,7 @@ class Scanner:
             return True
 
         return self._call_and_check(
-            checkers.deep if self._deep_scan else checkers.quick
+            checkers.quick if not self._deep_scan else checkers.deep
         )
 
 
@@ -86,20 +86,14 @@ class Link:
     def __init__(self, url: str, *, deep_scan: bool = False) -> None:
         self.url: str = url
         self.parsed_url: ParseResult = urlparse(url)
+        self.scanner: Scanner = Scanner(
+            self.parsed_url.netloc,
+            self.parsed_url.path[1:],  # Cut "/"
+            deep_scan=deep_scan,
+        )
 
         self._deep_scan: bool = deep_scan
         self._is_safe: bool = False
-
-        # Scanner is not designed to handle tg protocol links
-        self._scanner: Scanner | None = (
-            Scanner(
-                self.parsed_url.netloc,
-                self.parsed_url.path[1:],  # Cut "/"
-                deep_scan=deep_scan,
-            )
-            if "." in self.parsed_url.netloc
-            else None
-        )
 
     def _is_broken(self) -> bool:
         """ "
@@ -123,16 +117,6 @@ class Link:
         """
         return self._is_safe
 
-    @property
-    def is_invite(self) -> bool:
-        """
-        Checks if the link is an invitation to join a chat.
-        """
-        if self._scanner and self.parsed_url.netloc == _DOMAIN_TG_LINK:
-            return self._scanner.is_tg_invite_link()
-
-        return False
-
     def scan(self) -> bool:
         """
         Scans the link for advertising using the selected scanning mode
@@ -144,8 +128,8 @@ class Link:
         """
         if self._is_broken():
             self._is_safe = True
-        elif self._scanner and self.parsed_url.path != "":
-            self._is_safe = not self._scanner.find()
+        elif self.parsed_url.path != "":
+            self._is_safe = not self.scanner.find()
 
         logger.debug(f"Link scan complete: {self.url=} {self._is_safe=}")
         return not self._is_safe
