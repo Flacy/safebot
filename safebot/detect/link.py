@@ -49,6 +49,14 @@ class Scanner:
 
         return self.path[0] == "+" or self.path.startswith("joinchat/")
 
+    def is_references_to(self, username: str) -> bool:
+        """
+        Determines if the path corresponds to the username.
+
+        :param username: Text user ID.
+        """
+        return self.path == username
+
     def _call_and_check(self, methods: _ScannerMethods) -> bool:
         """
         Invokes each passed method in turn.

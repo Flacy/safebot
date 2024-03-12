@@ -27,12 +27,22 @@ class Reader:
 
         return False
 
+    def _is_self_reference(self, link: Link) -> bool:
+        """
+        Checks if the link references to bot itself.
+        """
+        user = self.message.forward_from or self.message.from_user
+        # Bots shouldn't forward messages,
+        # so consider a forwarded message to be from a real user a priori.
+        return link.scanner.is_references_to(user.username)
+
     def _contain_text_link(self) -> bool:
         """
         Scans for unsafe links in the message text.
         """
         for url in helpers.retrieve_urls(self.message.text, self.message.entities):
-            if Link(url, deep_scan=self.deep_scan).scan():
+            link = Link(url, deep_scan=self.deep_scan)
+            if link.scan() and not self._is_self_reference(link):
                 return True
 
         return False
