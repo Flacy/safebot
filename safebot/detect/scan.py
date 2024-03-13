@@ -1,7 +1,7 @@
 from pyrogram.enums import MessageEntityType
 from pyrogram.types import Message, InlineKeyboardMarkup
 
-from safebot import helpers
+from safebot.detect import filters
 from safebot.detect.link import Link
 
 
@@ -40,7 +40,7 @@ class Reader:
         """
         Scans for unsafe links in the message text.
         """
-        for url in helpers.retrieve_urls(self.message.text, self.message.entities):
+        for url in filters.retrieve_urls(self.message.text, self.message.entities):
             link = Link(url, deep_scan=self.deep_scan)
             if link.scan() and not self._is_self_reference(link):
                 return True

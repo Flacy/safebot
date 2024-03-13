@@ -1,7 +1,7 @@
 import pytest
 from pyrogram.enums import MessageEntityType
 
-from safebot import helpers
+from safebot.detect import filters
 from tests.dataset import MessageData, TG_URL
 
 _URL_WITHOUT_PROTOCOL = TG_URL.split("://")[1]
@@ -31,7 +31,7 @@ def assert_urls(collection: list[MessageData], t: MessageEntityType) -> None:
     it with the expected result.
     """
     for ent in collection:
-        result = helpers.retrieve_urls(ent.text, ent.generate_entities(t))
+        result = filters.retrieve_urls(ent.text, ent.generate_entities(t))
         assert list(result) == ent.expected
 
 
@@ -39,7 +39,7 @@ def test_retrieve_urls_empty() -> None:
     """
     Should return empty generator if there are no entities.
     """
-    assert len(list(helpers.retrieve_urls("", None))) == 0
+    assert len(list(filters.retrieve_urls("", None))) == 0
 
 
 @pytest.mark.parametrize(
@@ -60,4 +60,4 @@ def test_retrieve_urls_combine() -> None:
     """
     Both types of links should be parsed.
     """
-    assert list(helpers.retrieve_urls(TG_URL, _MESSAGES_COMBINED)) == ([TG_URL] * 2)
+    assert list(filters.retrieve_urls(TG_URL, _MESSAGES_COMBINED)) == ([TG_URL] * 2)

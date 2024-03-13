@@ -9,11 +9,11 @@ from pyrogram.errors import (
 from pyrogram.types import Chat
 
 from safebot.client import client
+from safebot.detect import filters
 from safebot.detect.link import Link
 from safebot.handlers import database
 from safebot.handlers.chat.abc import MessageProtocol
 from safebot.handlers.emitter import Emitter
-from safebot.helpers import retrieve_urls
 from safebot.logger import logger
 
 
@@ -29,7 +29,7 @@ class PrivateMessage(MessageProtocol):
 
         :return: Text link, if found
         """
-        for url in retrieve_urls(self.message.text, self.message.entities):
+        for url in filters.retrieve_urls(self.message.text, self.message.entities):
             return url
 
     async def _join_chat(self, url: str) -> Chat | None:
