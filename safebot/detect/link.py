@@ -28,7 +28,7 @@ class Scanner:
 
     def __init__(self, domain: str, path: str, *, deep_scan: bool = False) -> None:
         self.domain: str = domain
-        self.path: str = path
+        self.path: str = path.lower()
 
         self._deep_scan: bool = deep_scan
 
@@ -37,7 +37,7 @@ class Scanner:
         """
         Determines whether the bot username is specified in the path.
         """
-        return self.path.split("?")[0].lower().endswith("bot")
+        return self.path.split("?")[0].endswith("bot")
 
     @property
     def is_invite_link(self) -> bool:
@@ -55,7 +55,7 @@ class Scanner:
 
         :param username: Text user ID.
         """
-        return self.path == username
+        return self.path == username.lower()
 
     def _call_and_check(self, methods: _ScannerMethods) -> bool:
         """
