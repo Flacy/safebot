@@ -30,8 +30,8 @@ class PublicMessage(MessageProtocol):
 
     async def _echo_message(self) -> None:
         """
-        Sends an echo message, replacing all text links with its own.
-        Unsafe method
+        Sends a message by completely copying the text
+        and replacing links with safe ones.
         """
         filters.replace_text_links(self.message.entities)
         await client.send_message(
