@@ -6,12 +6,8 @@ services:
     container_name: safebot_app
     command: 'python /app/safebot/run.py'
     volumes:
-      # If you want to prevent accidental file substitution, comment this out
-      - ./safebot:/app/safebot
       # Store pyrogram sessions in a separate directory
       - ./session:/app/session
-      # Mount, as all migrations are executed inside docker
-      - ./migrations:/app/migrations
       # Locales that application will be used when sending messages
       - ./locales:/app/locales
     env_file: .env

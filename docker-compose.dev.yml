@@ -1,0 +1,10 @@
+version: '3.9'
+
+services:
+  app:
+    volumes:
+      # Avoid rebuilding the container each time.
+      - ./safebot:/app/safebot
+      - ./tests:/app/tests
+      # All migrations are executed inside docker
+      - ./migrations:/app/migrations
