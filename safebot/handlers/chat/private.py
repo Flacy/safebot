@@ -9,7 +9,7 @@ from pyrogram.errors import (
 from pyrogram.types import Chat
 
 from safebot.client import client
-from safebot.detect import filters
+from safebot.detect.filters import Filter
 from safebot.detect.link import Link
 from safebot.handlers import database
 from safebot.handlers.chat.abc import MessageProtocol
@@ -22,15 +22,6 @@ class PrivateMessage(MessageProtocol):
         super().__init__(*args, **kwargs)
 
         self._emit: Emitter = Emitter(self.message)
-
-    def _retrieve_invite_link(self) -> str | None:
-        """
-        Retrieves the first link from the message entities.
-
-        :return: Text link, if found
-        """
-        for url in filters.retrieve_urls(self.message.text, self.message.entities):
-            return url
 
     async def _join_chat(self, url: str) -> Chat | None:
         """
@@ -77,8 +68,8 @@ class PrivateMessage(MessageProtocol):
         unnecessary information.
         """
         if (
-            (url := self._retrieve_invite_link())
-            and Link(url).scanner.is_invite_link
+            (url := Filter(self.message).first_url)
+            and Link(url).is_invite
             and (chat := await self._join_chat(url))
         ):
             await database.create_or_skip(chat.id)

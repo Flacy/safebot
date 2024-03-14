@@ -3,11 +3,13 @@ from urllib.parse import ParseResult, urlparse
 
 from safebot.logger import logger
 
-_DOMAINS_TG = (
+INVITE_HASH_LENGTH = 16
+
+DOMAINS_TG = (
     "t.me",
     "telegram.org",
 )
-_DOMAIN_TG_LINK = _DOMAINS_TG[0]
+DOMAIN_TG_SHORT = DOMAINS_TG[0]
 
 _ScannerMethods = tuple[[property, bool], ...]
 
@@ -31,6 +33,14 @@ class Scanner:
         self.path: str = path.lower()
 
         self._deep_scan: bool = deep_scan
+        self._is_tg_shortlink: bool = domain == DOMAIN_TG_SHORT
+
+    @property
+    def is_tg_shortlink(self) -> bool:
+        """
+        Whether the domain belongs to Telegram and it is short.
+        """
+        return self._is_tg_shortlink
 
     @property
     def is_bot(self) -> bool:
@@ -44,10 +54,15 @@ class Scanner:
         """
         Determines whether the path matches the pattern of an invitation link.
         """
-        if self.domain != _DOMAIN_TG_LINK or self.path == "":
-            return False
+        offset = -1
 
-        return self.path[0] == "+" or self.path.startswith("joinchat/")
+        if 20 > (length := len(self.path)) > 0:
+            if self.path[0] == "+":
+                offset = 1
+            elif self.path[:9] == "joinchat/":
+                offset = 9
+
+        return (length - offset) == INVITE_HASH_LENGTH if offset != -1 else False
 
     def is_references_to(self, username: str) -> bool:
         """
@@ -92,7 +107,7 @@ class Link:
         self.parsed_url: ParseResult = urlparse(url)
         self.scanner: Scanner = Scanner(
             self.parsed_url.netloc,
-            self.parsed_url.path[1:],  # Cut "/"
+            self.parsed_url.path[1:100],  # Cut "/"
             deep_scan=deep_scan,
         )
 
@@ -121,18 +136,25 @@ class Link:
         """
         return self._is_safe
 
+    @property
+    def is_invite(self) -> bool:
+        """
+        Whether the link is an invitation.
+        """
+        return self.scanner.is_tg_shortlink and self.scanner.is_invite_link
+
     def scan(self) -> bool:
         """
         Scans the link for advertising using the selected scanning mode
-        *(quick or deep)*. If the link is in the ignore list,
-        it will be marked as safe without any scanning.
+        *(quick or deep)*.
+        If the link is broken, it will be marked as safe without any scanning.
         If there are no checks for a domain, the link will be marked as unsafe.
 
         :return: Whether the link is considered unsafe.
         """
         if self._is_broken():
             self._is_safe = True
-        elif self.parsed_url.path != "":
+        elif self.scanner.is_tg_shortlink and self.parsed_url.path != "":
             self._is_safe = not self.scanner.find()
 
         logger.debug(f"Link scan complete: {self.url=} {self._is_safe=}")
@@ -144,7 +166,7 @@ def _init_scanner_methods() -> None:
     Adds validation methods to the ``Scanner`` corresponding to each domain.
     """
     Scanner.methods = {
-        _DOMAIN_TG_LINK: _LinkCheck(
+        DOMAIN_TG_SHORT: _LinkCheck(
             quick=(
                 Scanner.is_bot,
                 Scanner.is_invite_link,
@@ -158,7 +180,7 @@ def _add_scanner_aliases() -> None:
     """
     Adds aliases to the domains by creating references to the original.
     """
-    for service in (_DOMAINS_TG,):
+    for service in (DOMAINS_TG,):
         original = service[0]
 
         for domain in service[1:]:

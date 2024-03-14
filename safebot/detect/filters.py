@@ -1,9 +1,61 @@
 from typing import Generator
 
-from pyrogram.enums import MessageEntityType
-from pyrogram.types import MessageEntity
+from pyrogram.enums import MessageEntityType as EntityType
+from pyrogram.types import MessageEntity, Message
 
 from safebot.settings import config
+
+UNSAFE_ENTITIES = (
+    EntityType.URL,
+    EntityType.TEXT_LINK,
+    EntityType.MENTION,
+    EntityType.TEXT_MENTION,
+)
+
+SAFE_URL = f"https://t.me/{config.user_id}"
+
+
+class Filter:
+    def __init__(self, message: Message) -> None:
+        self.message: Message = message
+
+        self.text: str = message.text
+        self.entities: list[MessageEntity] = message.entities or []
+
+    def _delete_entity(self, target: MessageEntity) -> None:
+        for i, ent in enumerate(self.entities):
+            if ent == target:
+                del self.entities[i]
+                break
+
+    def slice(self, offset: int, length: int) -> str:
+        return self.text[offset:][:length]  # fmt: skip
+
+    @property
+    def first_url(self) -> str | None:
+        for ent in self.entities:
+            if ent.type == EntityType.URL:
+                return _standardize_url(self.slice(ent.offset, ent.length))
+            elif ent.type == EntityType.TEXT_LINK:
+                return ent.url
+
+    @property
+    def unsafe_entities(self) -> Generator[MessageEntity, bool, None]:
+        for ent in self.entities:
+            if ent.type in UNSAFE_ENTITIES:
+                yield ent
+
+    # noinspection PyMethodMayBeStatic
+    def make_entity_safe(self, entity: MessageEntity) -> None:
+        match entity.type:
+            case EntityType.URL:
+                pass  # TODO
+            case EntityType.TEXT_LINK:
+                entity.url = SAFE_URL
+            case EntityType.MENTION:
+                pass  # TODO
+            case EntityType.TEXT_MENTION:
+                pass  # TODO
 
 
 def _standardize_url(url: str) -> str:
@@ -17,33 +69,3 @@ def _standardize_url(url: str) -> str:
         return "https://" + url
 
     return url
-
-
-def retrieve_urls(
-    text: str, entities: list[MessageEntity] | None
-) -> Generator[str, None, None]:
-    """
-    Traverses all entities and filters them by links.
-
-    :param text: Raw message text;
-    :param entities: Message entities.
-    :return: A generator containing only text links.
-    """
-    for ent in entities or ():
-        if ent.type == MessageEntityType.URL:
-            # Telegram can send links without a protocol.
-            # This breaks the "urlparse" algorithm,
-            # so standardize it to RFC format.
-            yield _standardize_url(text[ent.offset:][:ent.length])  # fmt: skip
-        elif ent.type == MessageEntityType.TEXT_LINK:
-            yield ent.url
-
-
-def replace_text_links(entities: list[MessageEntity] | None) -> None:
-    """
-    Replaces all text links in the entities with a link that leads
-    to the ``config.user_id``.
-    """
-    for data in entities or ():
-        if data.type == MessageEntityType.TEXT_LINK:
-            data.url = f"https://t.me/{config.user_id}"

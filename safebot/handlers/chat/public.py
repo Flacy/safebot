@@ -1,5 +1,5 @@
 from safebot.client import client
-from safebot.detect import scan, filters
+from safebot.detect.scan import Reader
 from safebot.handlers import database
 from safebot.handlers.chat.abc import MessageProtocol
 from safebot.handlers.emitter import Emitter
@@ -7,6 +7,11 @@ from safebot.logger import logger
 
 
 class PublicMessage(MessageProtocol):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.reader: Reader | None = Reader(self.message) if self.from_bot else None
+
     async def _delete_message(self) -> bool:
         """
         Deletes message and returns status of whether message has been deleted.
@@ -33,7 +38,6 @@ class PublicMessage(MessageProtocol):
         Sends a message by completely copying the text
         and replacing links with safe ones.
         """
-        filters.replace_text_links(self.message.entities)
         await client.send_message(
             self.chat_id,
             self.message.text,
@@ -42,14 +46,13 @@ class PublicMessage(MessageProtocol):
         )
 
     async def process(self) -> None:
-        if self.sender and self.sender.is_bot:
-            reader = scan.Reader(self.message)
+        if self.reader and self.reader.quick_scan():
+            logger.info(
+                f"Advertisement detected during quick scanning ({self.message_id=}, {self.chat_id=})"
+            )
+            is_deleted = await self._delete_message()
 
-            if reader.quick_scan():
-                logger.debug(f"Found adv in ({self.message_id=}, {self.chat_id=})")
-                is_deleted = await self._delete_message()
-
-                if is_deleted and reader.can_echo_message:
-                    await self._echo_message()
-                else:
-                    await self._event_message_deleted(is_deleted)
+            if is_deleted and self.reader.is_reply_message:
+                await self._echo_message()
+            else:
+                await self._event_message_deleted(is_deleted)

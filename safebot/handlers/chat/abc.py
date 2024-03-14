@@ -7,7 +7,7 @@ class MessageProtocol(abc.ABC):
     def __init__(self, message: Message) -> None:
         self.chat_id: int = message.chat.id
         self.message_id: int = message.id
-        self.sender: User | None = message.forward_from or message.from_user
+        self.from_bot: bool = message.from_user and message.from_user.is_bot
 
         self.message: Message = message
 
