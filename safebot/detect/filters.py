@@ -20,7 +20,7 @@ class Filter:
         self.message: Message = message
 
         self.text: str = message.text
-        self.entities: list[MessageEntity] = message.entities or []
+        self.entities: list[MessageEntity] = message.entities or message.caption_entities or []
 
     def _delete_entity(self, target: MessageEntity) -> None:
         for i, ent in enumerate(self.entities):

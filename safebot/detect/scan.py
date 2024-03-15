@@ -29,19 +29,6 @@ class Reader:
             message.reply_to_message is not None
         ) or self._contain_text_mention()
 
-    def _contain_unsafe_inline_button(self) -> bool:
-        """
-        Scans inline keyboard buttons for any unsafe link.
-        """
-        for line in self.inline_keyboard:
-            for button in line:
-                if button.url is None:
-                    continue
-                elif self._is_unsafe_link(button.url):
-                    return True
-
-        return False
-
     def _contain_text_mention(self) -> bool:
         """
         Checks if there is any text mention in the entities.
@@ -107,6 +94,19 @@ class Reader:
         """
         return self._from_username
 
+    def scan_unsafe_inline_button(self) -> bool:
+        """
+        Scans inline keyboard buttons for any unsafe link.
+        """
+        for line in self.inline_keyboard:
+            for button in line:
+                if button.url is None:
+                    continue
+                elif self._is_unsafe_link(button.url):
+                    return True
+
+        return False
+
     def scan_entity(self, entity: MessageEntity) -> bool:
         """
         Matches the unsafe entity type with its check method and invokes it.
@@ -161,4 +161,4 @@ class Reader:
 
         :return: ``True`` if the message contains adv, otherwise ``False``
         """
-        return self.secure_filter(cut_unsafe=True)
+        return self.secure_filter(cut_unsafe=True) or self.scan_unsafe_inline_button()
