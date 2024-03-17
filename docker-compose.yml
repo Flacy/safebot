@@ -30,5 +30,5 @@ volumes:
 
 networks:
   safebot-net:
-    external:
-      name: 'safebot_network'
+    name: 'safebot_network'
+    driver: 'bridge'
