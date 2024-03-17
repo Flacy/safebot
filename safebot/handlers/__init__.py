@@ -15,15 +15,8 @@ from safebot.logger import logger
 @logger.catch
 async def _message_handler(_: Client, message: Message) -> None:
     """
-    Performs a quick scan of messages from bots for any links and proceeds
-    with further processing logic.
-
-    Quick scan implies a superficial scanning of links that contains in a message.
-    If any link is found in the message, it is deleted.
-    If echo mode is enabled in the chat, the message will be sent on behalf
-    of the application with all links replaced.
-
-    If echo mode is enabled, silent mode will be applied forcibly.
+    Routes the message to be processed by the appropriate class
+    based on the chat type.
     """
     handler: Type[MessageProtocol]
     chat_type = message.chat.type
