@@ -11,7 +11,8 @@ class Emitter:
     def __init__(self, message: Message) -> None:
         self.message: Message = message
 
-    def prepare_text(self, key: str, **kwargs) -> str:
+    @staticmethod
+    def prepare_text(key: str, **kwargs) -> str:
         """
         Retrieves a text from the locale's dictionary using the specified key.
 
@@ -20,7 +21,7 @@ class Emitter:
         :return: Localized text
         """
         # TODO: one language is temporarily solution.
-        return self.localizator(key, "en_US", **kwargs)
+        return Emitter.localizator(key, "en_US", **kwargs)
 
     async def send(self, key: str, *, reply: bool = False, **fmt) -> None:
         """
