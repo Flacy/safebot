@@ -1,7 +1,3 @@
-import json
-from pathlib import Path
-from random import sample
-
 from plate import Plate
 from pyrogram.types import Message
 
@@ -26,13 +22,7 @@ class Emitter:
         # TODO: one language is temporarily solution.
         return self.localizator(key, "en_US", **kwargs)
 
-    async def send(
-        self,
-        key: str,
-        *,
-        reply: bool = False,
-        **fmt,
-    ) -> None:
+    async def send(self, key: str, *, reply: bool = False, **fmt) -> None:
         """
         Sends a message with the localized text to the chat.
 
@@ -72,7 +62,7 @@ def _decode_plate_exception(exc: ValueError) -> str:
     """
     # We know that the description of the error comes before the sentence starting
     # with "Possible" (method: Plate._check_valid_locale)
-    return (t := str(exc))[:i - 1 if (i := t.find("Possible")) != -1 else None]
+    return (t := str(exc))[: i - 1 if (i := t.find("Possible")) != -1 else None]
 
 
 def _init_localizator() -> None:
@@ -87,4 +77,6 @@ def init() -> None:
     _init_localizator()
 
     language_codes = Emitter.localizator.locales.keys()
-    logger.info(f"{len(language_codes)} locales initialized: ({', '.join(language_codes)})")
+    logger.info(
+        f"{len(language_codes)} locales initialized: ({', '.join(language_codes)})"
+    )
