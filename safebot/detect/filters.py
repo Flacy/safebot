@@ -13,23 +13,36 @@ UNSAFE_ENTITIES = (
 )
 
 SAFE_URL = f"https://t.me/{config.user_id}"
+REMOVED_TEXT = "**removed**"
 
 
 class Filter:
     def __init__(self, message: Message) -> None:
         self.message: Message = message
 
-        self.text: str = message.text
-        self.entities: list[MessageEntity] = message.entities or message.caption_entities or []
+        self.text: str = message.text or message.caption
+        self.entities: list[MessageEntity] = (
+            message.entities or message.caption_entities or []
+        )
 
-    def _delete_entity(self, target: MessageEntity) -> None:
-        for i, ent in enumerate(self.entities):
-            if ent == target:
-                del self.entities[i]
-                break
+        self._entity_shift: int = 0
+
+    def _replace_entity(self, target: MessageEntity) -> None:
+        target.type = EntityType.ITALIC
+        self.text = self.concat(target.offset, target.length, REMOVED_TEXT)
+
+        target.offset += self._entity_shift
+        target.length = len(REMOVED_TEXT)
+        self._entity_shift += len(REMOVED_TEXT) - target.length
+
+    def _shift_entity(self, target: MessageEntity) -> None:
+        target.offset += self._entity_shift
 
     def slice(self, offset: int, length: int) -> str:
         return self.text[offset:][:length]  # fmt: skip
+
+    def concat(self, offset: int, length: int, data: str) -> str:
+        return self.text[:offset] + data + self.text[offset + length :]
 
     @property
     def first_url(self) -> str | None:
@@ -43,19 +56,23 @@ class Filter:
     def unsafe_entities(self) -> Generator[MessageEntity, bool, None]:
         for ent in self.entities:
             if ent.type in UNSAFE_ENTITIES:
+                self._shift_entity(ent)
                 yield ent
 
     # noinspection PyMethodMayBeStatic
     def make_entity_safe(self, entity: MessageEntity) -> None:
         match entity.type:
             case EntityType.URL:
-                pass  # TODO
+                self._replace_entity(entity)
             case EntityType.TEXT_LINK:
-                entity.url = SAFE_URL
+                self._replace_entity(entity)
+                entity.url = None
             case EntityType.MENTION:
-                pass  # TODO
+                self._replace_entity(entity)
             case EntityType.TEXT_MENTION:
-                pass  # TODO
+                entity.user = self.message.from_user
+            case _:
+                raise ValueError(f"Unsupported entity type: {entity.type}")
 
 
 def _standardize_url(url: str) -> str:
