@@ -1,5 +1,6 @@
 {
   "message_deleted": "suspicion of advertising, {mention}. Message deleted",
+  "cut_unsafe": "<advertisement>",
   "not_enough_rights": "i don't have enough rights, to delete this",
   "already_in_chat": "i'm already in this chat",
   "invite_link_expired": "the invitation link has expired ;(",
