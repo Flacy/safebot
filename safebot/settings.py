@@ -5,7 +5,8 @@ class _Settings(BaseSettings):
     # Variable responsible for determining the mode in which app will be launched.
     # When enabled, all debug information will be hidden.
     production: bool = False
-    user_id: str
+    # @username that will be specified when replacing unsafe links
+    username: str = ""
 
     # Telegram data
     api_id: int

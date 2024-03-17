@@ -12,8 +12,8 @@ UNSAFE_ENTITIES = (
     EntityType.TEXT_MENTION,
 )
 
-SAFE_URL = f"https://t.me/{config.user_id}"
-REMOVED_TEXT = "**removed**"
+SAFE_URL = f"https://t.me/{config.username}"
+LOCALE_REPLACE_ENTITY = "cut_unsafe"
 
 
 class Filter:
