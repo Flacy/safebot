@@ -40,7 +40,7 @@ class PublicMessage(MessageProtocol):
         """
         await client.send_message(
             self.chat_id,
-            self.reader.filter.text,
+            self.reader.filter.text,  # type: ignore
             entities=self.message.entities,
             disable_web_page_preview=True,
         )

@@ -66,7 +66,7 @@ class Filter:
                 self._replace_entity(entity)
             case EntityType.TEXT_LINK:
                 self._replace_entity(entity)
-                entity.url = None
+                entity.url = None  # type: ignore
             case EntityType.MENTION:
                 self._replace_entity(entity)
             case EntityType.TEXT_MENTION:

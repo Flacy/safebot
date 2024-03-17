@@ -11,7 +11,7 @@ DOMAINS_TG = (
 )
 DOMAIN_TG_SHORT = DOMAINS_TG[0]
 
-_ScannerMethods = tuple[[property, bool], ...]
+_ScannerMethods = tuple[[property, bool], ...]  # type: ignore
 
 
 @dataclass
