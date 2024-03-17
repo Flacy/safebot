@@ -9,4 +9,6 @@ peewee~=3.17.1
 peewee-async~=0.10.0
 peewee-migrations~=0.3.32
 
+plate~=1.0.1
+
 loguru~=0.7.2

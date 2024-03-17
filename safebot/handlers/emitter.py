@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from random import sample
 
+from plate import Plate
 from pyrogram.types import Message
 
 from safebot.client import client
@@ -9,23 +10,21 @@ from safebot.logger import logger
 
 
 class Emitter:
-    locales: dict[str, dict[str, list[str]]] = {}
+    localizator: Plate
 
     def __init__(self, message: Message) -> None:
         self.message: Message = message
 
-    def _get_text(self, lang_code: str, key: str) -> str:
+    def prepare_text(self, key: str, **kwargs) -> str:
         """
-        Retrieves random locale from the locale's dictionary
-        using the specified key and language code.
-        If the language code is not found, "en" will be used.
+        Retrieves a text from the locale's dictionary using the specified key.
 
-        :param lang_code: Two-letter language code
-        :param key: Locale key
-        :return: Locale text
+        :param key: Locale key;
+        :param kwargs: Named arguments to interpolate text.
+        :return: Localized text
         """
-        loc = self.locales.get(lang_code, self.locales.get("en"))
-        return sample(loc[key], 1)[0]  # type: ignore
+        # TODO: one language is temporarily solution.
+        return self.localizator(key, "en_US", **kwargs)
 
     async def send(
         self,
@@ -39,14 +38,11 @@ class Emitter:
 
         :param key: Locale key;
         :param reply: Whether this message will be a reply;
+        :param fmt: Named arguments to interpolate text.
         """
-        text = self._get_text(self.message.from_user.language_code, key)
-        if fmt:
-            text = text.format(**fmt)
-
         await client.send_message(
             self.message.chat.id,
-            text,
+            self.prepare_text(key, **fmt),
             reply_to_message_id=self.message.id if reply else None,  # type: ignore
         )
 
@@ -62,29 +58,33 @@ class Emitter:
             await self.send("not_enough_rights", reply=True)
 
 
-def __load_locales() -> int:
+def _decode_plate_exception(exc: ValueError) -> str:
     """
-    Loads localization files (stored in "locales" and are of type json)
-    into ``Emitter.locales``.
+    Since Plate doesn't have its own exceptions,
+    it is necessary to check for the specific type of error for proper information.
 
-    :return: Count of successfully loaded locales
+    Essentially, this method only formats the error text,
+    which contains all supported language codes (others will be returned unchanged).
+    This error occurs when a file with an incorrect code appears in locales directory.
+
+    :param exc: Plate exception.
+    :return: Formatted to string error text.
     """
-    count = 0
+    # We know that the description of the error comes before the sentence starting
+    # with "Possible" (method: Plate._check_valid_locale)
+    return (t := str(exc))[:i - 1 if (i := t.find("Possible")) != -1 else None]
 
-    for file in Path("locales").glob("*.json"):
-        code = file.name[:2]
 
-        try:
-            with file.open() as f:
-                Emitter.locales[code] = json.load(f)
-
-            logger.debug(f"Locale '{code}' loaded")
-            count += 1
-        except Exception as e:
-            logger.error(f"Locale '{code}' was failed to load: {e}")
-
-    return count
+def _init_localizator() -> None:
+    try:
+        Emitter.localizator = Plate()
+    except ValueError as e:
+        logger.critical(f"Unable to load locales: {_decode_plate_exception(e)}")
+        exit(1)
 
 
 def init() -> None:
-    logger.info(f"{__load_locales()} locales initialized")
+    _init_localizator()
+
+    language_codes = Emitter.localizator.locales.keys()
+    logger.info(f"{len(language_codes)} locales initialized: ({', '.join(language_codes)})")
