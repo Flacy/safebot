@@ -1,5 +1,5 @@
 [tool.black]
-line-length = 88
+line-length = 90
 
 [tool.mypy]
 plugins = [
@@ -7,4 +7,5 @@ plugins = [
 ]
 ignore_missing_imports = true
 warn_no_return = false
+check_untyped_defs = true
 exclude = ['venv', 'migrations', 'tests']
